@@ -1,23 +1,24 @@
 import Link from "next/link";
 import { supabase } from "../../../utils/supabase";
-import DamageCalculator from "../../../components/DamageCalculator"; // 경로 확인 필요!
+import DamageCalculator from "../../../components/DamageCalculator";
 
 export default async function MonsterDetail({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  // 1. URL주소에서 id 숫자 꺼내오기 (비동기 처리)
   const { id } = await params;
 
-  // 2. Supabase한테 물어보기: "id가 이거인 놈 딱 1마리(.single)만 줘"
-  const { data: monster, error } = await supabase
+  // Supabase에서 데이터 가져오기
+  const { data: monsterData, error } = await supabase
     .from("monsters")
     .select("*")
     .eq("id", id)
     .single();
 
-  // 3. 몬스터가 없거나 에러가 나면?
+  // ⭐️ [해결의 열쇠] "이 데이터는 뭐든지 될 수 있다(any)"라고 선언해서 에러 무시하기
+  const monster = monsterData as any;
+
   if (error || !monster) {
     return (
       <div className="p-10 text-center text-xl">
@@ -27,7 +28,6 @@ export default async function MonsterDetail({
     );
   }
 
-  // 4. 있으면 화면에 그리기
   return (
     <div className="p-10 min-h-screen text-black bg-white">
       <Link href="/" className="text-blue-500 hover:underline mb-4 inline-block">
@@ -35,8 +35,8 @@ export default async function MonsterDetail({
       </Link>
 
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
-        {/* 왼쪽: 이미지 */}
         <div className="bg-gray-100 rounded-xl overflow-hidden shadow-lg h-96">
+             {/* 이미지 안전장치 추가 */}
              <img 
                src={monster.image || "/mob1.jpg"} 
                alt={monster.name} 
@@ -44,7 +44,6 @@ export default async function MonsterDetail({
              />
         </div>
 
-        {/* 오른쪽: 정보 */}
         <div>
           <h1 className="text-5xl font-bold mb-4 text-red-600">{monster.name}</h1>
           
@@ -54,9 +53,9 @@ export default async function MonsterDetail({
             <p>💰 <strong>주요 드랍:</strong> {monster.drop}</p>
           </div>
 
-          {/* 계산기 컴포넌트 (이전 시간에 만든 것) */}
           <div className="mt-8">
-            <DamageCalculator hp={parseInt(monster.hp.replace(/,/g, ""))} />
+            {/* ⭐️ [핵심 수정] String(...)으로 한 번 감싸서 무조건 문자로 만듦 */}
+            <DamageCalculator hp={parseInt(String(monster.hp).replace(/,/g, ""))} />
           </div>
         </div>
       </div>
