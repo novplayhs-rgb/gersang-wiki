@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabase } from "../../../utils/supabase";
 import DamageCalculator from "../../../components/DamageCalculator";
+import CommentSection from "../../../components/CommentSection"; // 👈 추가
 
 export default async function MonsterDetail({
   params,
@@ -155,6 +156,10 @@ export default async function MonsterDetail({
 
             <div className="mt-10 pt-8 border-t">
                <DamageCalculator hp={monster.hp} />
+            </div>
+            {/* 👇 새로 추가된 댓글 영역 */}
+            <div className="mt-8">
+               <CommentSection category="monster" targetId={monster.id} />
             </div>
           </div>
         </div>
