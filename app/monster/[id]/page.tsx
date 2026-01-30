@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { supabase } from "../../../utils/supabase";
-import DamageCalculator from "../../../components/DamageCalculator";
+// import DamageCalculator from "../../../components/DamageCalculator"; // 1. 일단 가져오기 끄기
 
 export default async function MonsterDetail({
   params,
@@ -9,14 +9,12 @@ export default async function MonsterDetail({
 }) {
   const { id } = await params;
 
-  // Supabase에서 데이터 가져오기
   const { data: monsterData, error } = await supabase
     .from("monsters")
     .select("*")
     .eq("id", id)
     .single();
 
-  // ⭐️ [해결의 열쇠] "이 데이터는 뭐든지 될 수 있다(any)"라고 선언해서 에러 무시하기
   const monster = monsterData as any;
 
   if (error || !monster) {
@@ -36,7 +34,6 @@ export default async function MonsterDetail({
 
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
         <div className="bg-gray-100 rounded-xl overflow-hidden shadow-lg h-96">
-             {/* 이미지 안전장치 추가 */}
              <img 
                src={monster.image || "/mob1.jpg"} 
                alt={monster.name} 
@@ -54,8 +51,9 @@ export default async function MonsterDetail({
           </div>
 
           <div className="mt-8">
-            {/* ⭐️ [핵심 수정] String(...)으로 한 번 감싸서 무조건 문자로 만듦 */}
-            <DamageCalculator hp={parseInt(String(monster.hp).replace(/,/g, ""))} />
+            <p className="text-gray-400">🚧 데미지 계산기 수리중... 🚧</p>
+            {/* 2. 사용하는 부분도 일단 숨기기 */}
+            {/* <DamageCalculator hp={parseInt(String(monster.hp).replace(/,/g, ""))} /> */}
           </div>
         </div>
       </div>
