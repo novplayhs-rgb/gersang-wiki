@@ -1,64 +1,63 @@
-import DamageCalculator from "../../../components/DamageCalculator";
-
-// app/monster/[id]/page.tsx
+import Link from "next/link";
+import { supabase } from "../../../utils/supabase";
+import DamageCalculator from "../../../components/DamageCalculator"; // 경로 확인 필요!
 
 export default async function MonsterDetail({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  // 1. URL에서 "이게 몇 번 몬스터야?"(id)를 알아냅니다.
+  // 1. URL주소에서 id 숫자 꺼내오기 (비동기 처리)
   const { id } = await params;
-  
-  // 2. 전체 데이터 (임시 데이터베이스)
-  // (실제 개발에선 이 부분이 진짜 DB 연결로 바뀝니다)
-  const monsters = [
-    { id: 1, name: "청랑", hp: "120,000", location: "검은상단 주둔지", drop: "낡은태부", image: "/mob1.jpg" },
-    { id: 2, name: "광호", hp: "80,000", location: "무령왕릉", drop: "검은수정", image: "/mob2.jpg" },
-    { id: 3, name: "홍작", hp: "500,000", location: "화구산", drop: "주작의근원", image: "/mob3.jpg" },
-    { id: 4, name: "기문교주", hp: "600,000", location: "대관령", drop: "기문교주의지팡이", image: "/mob4.jpg" },
-  ];
 
-  // 3. ID에 맞는 몬스터 딱 한 마리만 찾아냅니다.
-  const monster = monsters.find((m) => m.id === Number(id));
+  // 2. Supabase한테 물어보기: "id가 이거인 놈 딱 1마리(.single)만 줘"
+  const { data: monster, error } = await supabase
+    .from("monsters")
+    .select("*")
+    .eq("id", id)
+    .single();
 
-  // 만약 없는 번호(예: 99번)로 들어오면?
-  if (!monster) {
-    return <h1>몬스터를 찾을 수 없습니다.</h1>;
+  // 3. 몬스터가 없거나 에러가 나면?
+  if (error || !monster) {
+    return (
+      <div className="p-10 text-center text-xl">
+        <p>😢 몬스터 정보를 찾을 수 없습니다.</p>
+        <Link href="/" className="text-blue-500 hover:underline">홈으로 돌아가기</Link>
+      </div>
+    );
   }
 
+  // 4. 있으면 화면에 그리기
   return (
-    <div className="p-10 bg-white min-h-screen text-black">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-blue-800 mb-6">{monster.name} 상세 정보</h1>
-        
-        <div className="flex flex-col md:flex-row gap-8">
-            {/* 왼쪽: 이미지 */}
-            <div className="w-full md:w-1/2">
-                <img src={monster.image} alt={monster.name} className="w-full rounded-lg shadow-xl" />
-            </div>
+    <div className="p-10 min-h-screen text-black bg-white">
+      <Link href="/" className="text-blue-500 hover:underline mb-4 inline-block">
+        ← 뒤로가기
+      </Link>
 
-            {/* 오른쪽: 스탯 정보 */}
-            <div className="w-full md:w-1/2 text-lg space-y-4">
-                <p className="border-b pb-2">❤️ <strong>체력:</strong> {monster.hp}</p>
-                <p className="border-b pb-2">📍 <strong>출몰 지역:</strong> {monster.location}</p>
-                <p className="border-b pb-2">💰 <strong>주요 드랍템:</strong> {monster.drop}</p>
-                
-{/* ... 위쪽 코드 생략 ... */}
+      <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
+        {/* 왼쪽: 이미지 */}
+        <div className="bg-gray-100 rounded-xl overflow-hidden shadow-lg h-96">
+             <img 
+               src={monster.image || "/mob1.jpg"} 
+               alt={monster.name} 
+               className="object-cover w-full h-full"
+             />
+        </div>
 
-<p className="border-b pb-2">💰 <strong>주요 드랍템:</strong> {monster.drop}</p>
+        {/* 오른쪽: 정보 */}
+        <div>
+          <h1 className="text-5xl font-bold mb-4 text-red-600">{monster.name}</h1>
+          
+          <div className="space-y-4 text-xl text-gray-700 bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <p>❤️ <strong>체력:</strong> {monster.hp}</p>
+            <p>📍 <strong>출몰 위치:</strong> {monster.location}</p>
+            <p>💰 <strong>주요 드랍:</strong> {monster.drop}</p>
+          </div>
 
-{/* 👇 여기에 계산기 추가! (몬스터 체력을 부품에게 전달해줍니다) */}
-<DamageCalculator hp={monster.hp} />
-
-{/* 뒤로가기 버튼 */}
-<a href="/" className="inline-block mt-8 ..."></a>
-
-                {/* 뒤로가기 버튼 */}
-                <a href="/" className="inline-block mt-8 px-6 py-3 bg-gray-200 rounded hover:bg-gray-300">
-                    ← 목록으로 돌아가기
-                </a>
-            </div>
+          {/* 계산기 컴포넌트 (이전 시간에 만든 것) */}
+          <div className="mt-8">
+            <DamageCalculator hp={parseInt(monster.hp.replace(/,/g, ""))} />
+          </div>
         </div>
       </div>
     </div>

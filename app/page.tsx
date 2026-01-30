@@ -1,23 +1,43 @@
-"use client"; // 1. 이제 이 페이지는 사용자의 입력을 받습니다!
+"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react"; // useEffect 추가됨!
 import Link from "next/link";
+import { supabase } from "../utils/supabase"; // ⭐️ 우리가 만든 연결 도구 가져오기
+
+// 1. 몬스터 데이터 타입 정의 (TypeScript가 좋아합니다)
+type Monster = {
+  id: number;
+  name: string;
+  hp: string;
+  location: string;
+  drop: string;
+  image: string;
+};
 
 export default function Home() {
-  // 몬스터 데이터 (나중엔 DB에서 가져옴)
-  const monsters = [
-    { id: 1, name: "청랑", hp: "120,000", location: "검은상단 주둔지", drop: "낡은태부", image: "/mob1.jpg" },
-    { id: 2, name: "광호", hp: "80,000", location: "무령왕릉", drop: "검은수정", image: "/mob2.jpg" },
-    { id: 3, name: "홍작", hp: "500,000", location: "화구산", drop: "주작의근원", image: "/mob3.jpg" },
-    { id: 4, name: "기문교주", hp: "600,000", location: "대관령", drop: "기문교주의지팡이", image: "/mob4.jpg" },
-  ];
-
-  // 2. [검색 기능 핵심] 검색어를 저장할 공간(State) 만들기
+  // 2. 몬스터 데이터를 담을 빈 통 (처음엔 비어있음 [])
+  const [monsters, setMonsters] = useState<Monster[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // 3. [검색 기능 핵심] 검색어에 맞는 몬스터만 걸러내기(Filter)
+  // 3. [데이터 가져오기 핵심] 페이지가 열리면 Supabase에 다녀옴
+  useEffect(() => {
+    const fetchMonsters = async () => {
+      // 'monsters' 테이블에서 모든 것('*')을 가져와라!
+      const { data, error } = await supabase.from("monsters").select("*");
+
+      if (error) {
+        console.error("데이터 가져오기 실패:", error);
+      } else {
+        // 성공하면 가져온 데이터를 내 통(monsters)에 채워넣음
+        setMonsters(data || []);
+      }
+    };
+
+    fetchMonsters(); // 실행!
+  }, []);
+
+  // 4. 검색 필터링 (내 통에 있는 데이터로 검색)
   const filteredMonsters = monsters.filter((mob) =>
-    // 몬스터 이름에 검색어가 포함되어 있니? (includes)
     mob.name.includes(searchTerm)
   );
 
@@ -25,25 +45,24 @@ export default function Home() {
     <div className="p-10 bg-white min-h-screen text-black">
       <h1 className="text-5xl font-bold text-blue-700">천하제일 거상 위키</h1>
       <p className="mt-4 text-xl text-gray-600 mb-8">
-        여기는 내가 직접 만드는 거상 데이터베이스입니다.
+        Supabase DB와 연동된 실시간 데이터베이스입니다.
       </p>
 
-      {/* 4. 검색창 만들기 */}
+      {/* 검색창 */}
       <div className="mb-10">
         <input
           type="text"
           placeholder="몬스터 이름을 검색하세요..."
           className="w-full max-w-md p-4 border-2 border-blue-500 rounded-lg text-lg outline-none focus:bg-blue-50"
-          // 입력할 때마다 그 값을 검색어 저장 공간(setSearchTerm)에 넣음
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
       <p className="mb-4 text-gray-500">
-        검색 결과: {filteredMonsters.length}마리 발견
+        데이터 출처: Supabase Cloud / 검색 결과: {filteredMonsters.length}마리
       </p>
 
-      {/* 5. 이제 전체 목록(monsters)이 아니라, 걸러진 목록(filteredMonsters)을 보여줌 */}
+      {/* 목록 보여주기 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {filteredMonsters.map((mob) => (
           <Link 
@@ -52,8 +71,9 @@ export default function Home() {
             className="border-2 border-gray-300 p-6 rounded-lg hover:bg-blue-50 transition shadow-lg block"
           >
             <div className="relative w-full h-48 mb-4 bg-gray-200 rounded-md overflow-hidden">
+               {/* 이미지가 없으면 기본 이미지 보여주기 (에러 방지) */}
                <img 
-                 src={mob.image} 
+                 src={mob.image || "/mob1.jpg"} 
                  alt={mob.name} 
                  className="object-cover w-full h-full"
                />
