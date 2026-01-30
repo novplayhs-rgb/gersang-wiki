@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { supabase } from "../../../utils/supabase";
-// import DamageCalculator from "../../../components/DamageCalculator"; // 1. 일단 가져오기 끄기
+import DamageCalculator from "../../../components/DamageCalculator"; // ✅ 주석 해제!
 
 export default async function MonsterDetail({
   params,
@@ -25,6 +25,9 @@ export default async function MonsterDetail({
       </div>
     );
   }
+
+  // ⭐️ 여기서 안전하게 숫자(Number)로 변환
+  const cleanHp = parseInt(String(monster.hp || "0").replace(/,/g, ""), 10);
 
   return (
     <div className="p-10 min-h-screen text-black bg-white">
@@ -51,9 +54,8 @@ export default async function MonsterDetail({
           </div>
 
           <div className="mt-8">
-            <p className="text-gray-400">🚧 데미지 계산기 수리중... 🚧</p>
-            {/* 2. 사용하는 부분도 일단 숨기기 */}
-            {/* <DamageCalculator hp={parseInt(String(monster.hp).replace(/,/g, ""))} /> */}
+            {/* ✅ 깔끔하게 변환된 숫자(cleanHp)를 전달 */}
+            <DamageCalculator hp={cleanHp} />
           </div>
         </div>
       </div>
